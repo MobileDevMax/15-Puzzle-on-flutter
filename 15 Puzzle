@@ -1,0 +1,99 @@
+import 'package:flutter/material.dart';
+
+void main() {
+  runApp(PuzzleGame());
+}
+
+class PuzzleGame extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: GameScreen(),
+    );
+  }
+}
+
+class GameScreen extends StatefulWidget {
+  @override
+  _GameScreenState createState() => _GameScreenState();
+}
+
+class _GameScreenState extends State<GameScreen> {
+  final int size = 4;
+  List<int> tiles = [];
+  late int emptyTileIndex;
+
+  @override
+  void initState() {
+    super.initState();
+    _initTiles();
+  }
+
+  void _initTiles() {
+    tiles = List.generate(size * size - 1, (index) => index + 1)..add(0);
+    emptyTileIndex = tiles.length - 1;
+    tiles.shuffle();
+    if (tiles[emptyTileIndex] != 0) {
+      tiles.sort((a, b) => a.compareTo(b));
+      emptyTileIndex = tiles.lastIndexOf(0);
+    }
+  }
+
+  void _moveTile(int index) {
+    if (_canMove(index)) {
+      setState(() {
+        tiles[emptyTileIndex] = tiles[index];
+        tiles[index] = 0;
+        emptyTileIndex = index;
+      });
+    }
+  }
+
+  bool _canMove(int index) {
+    int row = index ~/ size;
+    int col = index % size;
+    int emptyRow = emptyTileIndex ~/ size;
+    int emptyCol = emptyTileIndex % size;
+
+    return (row == emptyRow && (col - 1 == emptyCol || col + 1 == emptyCol)) ||
+        (col == emptyCol && (row - 1 == emptyRow || row + 1 == emptyRow));
+  }
+
+  void _handleTap(int index) {
+    _moveTile(index);
+  }
+
+  Widget _buildTile(int index) {
+    return GestureDetector(
+      onTap: () => _handleTap(index),
+      child: Container(
+        margin: EdgeInsets.all(4),
+        width: 70,
+        height: 70,
+        decoration: BoxDecoration(
+          color: tiles[index] == 0 ? Colors.transparent : Colors.blue,
+          border: Border.all(color: Colors.grey),
+        ),
+        child: Center(
+          child: Text(
+            tiles[index] == 0 ? '' : '${tiles[index]}',
+            style: TextStyle(color: Colors.white, fontSize: 24),
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('15 Puzzle')),
+      body: GridView.builder(
+        gridDelegate:
+            SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: size),
+        itemCount: tiles.length,
+        itemBuilder: (context, index) => _buildTile(index),
+      ),
+    );
+  }
+}
